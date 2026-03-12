@@ -5,7 +5,7 @@ import { setCookie, getCookie } from "hono/cookie";
 import { sign, verify } from "jsonwebtoken";
 
 const app = new Hono();
-
+console.log(process.env.JWT_SECRET);
 app.use(logger());
 
 app.use(
