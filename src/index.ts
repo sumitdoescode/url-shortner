@@ -6,11 +6,12 @@ import { sign, verify } from "jsonwebtoken";
 
 const app = new Hono();
 console.log(process.env.JWT_SECRET);
+console.log("frontend", process.env.FRONTEND_URL);
 app.use(logger());
 
 app.use(
     cors({
-        origin: [`${process.env.FRONTEND_URL}`],
+        origin: process.env.FRONTEND_URL!,
         allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         credentials: true,
     }),
