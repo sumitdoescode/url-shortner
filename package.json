@@ -1,7 +1,8 @@
 {
     "name": "url-shortner",
     "scripts": {
-        "dev": "bun run --hot --env-file=.env src/index.ts"
+        "dev": "bun run --hot --env-file=.env src/index.ts",
+        "start": "bun run --env-file=.env src/index.ts"
     },
     "dependencies": {
         "@types/jsonwebtoken": "^9.0.10",
