@@ -1,9 +1,15 @@
 import { Hono } from "hono";
+import mongoose from "mongoose";
 
 const router = new Hono();
 
-router.get("/health", (c) => {
-    return c.json({ ok: true, message: "Welcome !" });
+// GET => /api/health
+router.get("/", (c) => {
+    return c.json({
+        ok: true,
+        server: "healthy",
+        database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    });
 });
 
 export default router;

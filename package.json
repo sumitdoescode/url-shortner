@@ -7,8 +7,12 @@
     "dependencies": {
         "better-auth": "^1.5.6",
         "hono": "^4.12.7",
+        "hono-rate-limiter": "^0.5.3",
         "mongodb": "^7.1.0",
-        "mongoose": "^9.3.1"
+        "mongoose": "^9.3.1",
+        "nanoid": "^5.1.7",
+        "resend": "^6.9.4",
+        "zod": "^4.3.6"
     },
     "devDependencies": {
         "@types/bun": "latest"

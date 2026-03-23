@@ -1,12 +1,13 @@
 import { Hono } from "hono";
-import { signup, signin } from "../controllers/user.controller";
+import { signup, signin, logout, getMe } from "../controllers/user.controller";
+import { requireAuth } from "../middlewares/auth.middleware";
+import { authRateLimit } from "../middlewares/rate-limit.middleware";
 
 const router = new Hono();
 
-// POST => /api/users/signup
-router.post("/signup", signup);
-
-// POST => /api/users/signin
-router.post("/signin", signin);
+router.post("/signup", authRateLimit, signup); // POST => /api/users/signup
+router.post("/signin", authRateLimit, signin); // POST => /api/users/signin
+router.post("/logout", requireAuth, logout); // POST => /api/users/logout
+router.get("/me", requireAuth, getMe); // GET => /api/users/me
 
 export default router;

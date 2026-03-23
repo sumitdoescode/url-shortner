@@ -3,7 +3,10 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { connectDB } from "./lib/db";
 import { setServers } from "node:dns";
+import { auth } from "./lib/auth";
 import userRoutes from "./routes/user.routes";
+import urlRoutes from "./routes/url.routes";
+import redirectRoutes from "./routes/redirect.routes";
 import healthRoutes from "./routes/health.routes";
 
 setServers(["1.1.1.1", "1.0.0.1"]);
@@ -14,13 +17,19 @@ app.use(logger());
 
 app.use(
     cors({
-        origin: "*",
+        origin: (origin) => origin ?? "",
         allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         credentials: true,
     }),
 );
 
-app.route("/api/user", userRoutes);
+app.on(["POST", "GET"], "/api/auth/*", (c) => {
+    return auth.handler(c.req.raw);
+});
+
+app.route("/r", redirectRoutes);
+app.route("/api/users", userRoutes);
+app.route("/api/urls", urlRoutes);
 app.route("/api/health", healthRoutes);
 
 app.notFound((c) => {
