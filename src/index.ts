@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { connectDB } from "./lib/db";
+import { connectRedis } from "./lib/redis";
 import { setServers } from "node:dns";
 import { auth } from "./lib/auth";
 import userRoutes from "./routes/user.routes";
@@ -17,7 +18,7 @@ app.use(logger());
 
 app.use(
     cors({
-        origin: (origin) => origin ?? "",
+        origin: "*",
         allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         credentials: true,
     }),
@@ -37,9 +38,10 @@ app.notFound((c) => {
 });
 
 app.onError((err, c) => {
-    console.error(`${err}`);
+    console.error("UNHANDLED APP ERROR:", err);
     return c.json({ message: "Something went wrong" }, 500);
 });
 
 connectDB();
+connectRedis();
 export default app;

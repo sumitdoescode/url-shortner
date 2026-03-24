@@ -12,7 +12,7 @@ export const requireAuth = async (c: Context, next: Next) => {
         c.set("user", session.user);
         await next();
     } catch (error) {
-        console.error("AUTH MIDDLEWARE ERROR :", error);
+        console.error("AUTH MIDDLEWARE ERROR:", { path: c.req.path, error });
         return c.json({ ok: false, error: error instanceof Error ? error.message : "Internal Server Error" }, 500);
     }
 };

@@ -6,6 +6,7 @@ import { Visit } from "../models/visit.model";
 import { Profile } from "../models/profile.model";
 import { nanoid } from "nanoid";
 import { isValidObjectId } from "mongoose";
+import { redis } from "../lib/redis";
 
 export const createUrl = async (c: Context) => {
     try {
@@ -49,7 +50,7 @@ export const createUrl = async (c: Context) => {
 
         return c.json({ ok: true, createdUrl }, 201);
     } catch (error) {
-        console.error("URL CREATION ERROR :", error);
+        console.error("URL CREATION ERROR:", { error });
         return c.json({ ok: false, error: error instanceof Error ? error.message : "Internal Server Error" }, 500);
     }
 };
@@ -60,7 +61,7 @@ export const getAllUrls = async (c: Context) => {
         const urls = await Url.find({ userId: user.id }).sort({ createdAt: -1 }).select("-__v -updatedAt -userId");
         return c.json({ ok: true, urls });
     } catch (error) {
-        console.error("URLS FETCHING ERROR :", error);
+        console.error("URLS FETCHING ERROR:", { error });
         return c.json({ ok: false, error: error instanceof Error ? error.message : "Internal Server Error" }, 500);
     }
 };
@@ -81,7 +82,7 @@ export const getSingleUrl = async (c: Context) => {
         url = { ...url._doc, totalVisits, shortUrl: `${process.env.BASE_URL}/r/${url.shortCode}` };
         return c.json({ ok: true, url });
     } catch (error) {
-        console.error("URL FETCHING ERROR :", error);
+        console.error("URL FETCHING ERROR:", { error });
         return c.json({ ok: false, error: error instanceof Error ? error.message : "Internal Server Error" }, 500);
     }
 };
@@ -97,9 +98,10 @@ export const deleteUrl = async (c: Context) => {
         if (!deleted) {
             return c.json({ ok: false, error: "URL not found or you are not authorized to delete it" }, 404);
         }
+        await redis.del(`url:${deleted.shortCode}`);
         return c.json({ ok: true, message: "URL deleted successfully" });
     } catch (error) {
-        console.error("URL DELETION ERROR :", error);
+        console.error("URL DELETION ERROR:", { error });
         return c.json({ ok: false, error: error instanceof Error ? error.message : "Internal Server Error" }, 500);
     }
 };
@@ -119,7 +121,7 @@ export const getUrlVisits = async (c: Context) => {
         const visits = await Visit.find({ urlId: id }).sort({ createdAt: -1 });
         return c.json({ ok: true, visits });
     } catch (error) {
-        console.error("URL FETCHING ERROR :", error);
+        console.error("URL VISITS FETCH ERROR:", { error });
         return c.json({ ok: false, error: error instanceof Error ? error.message : "Internal Server Error" }, 500);
     }
 };

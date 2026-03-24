@@ -33,7 +33,7 @@ export const signup = async (c: Context) => {
             return c.json({ ok: false, error: error instanceof Error ? error.message : "Unable to signup user" }, 400);
         }
     } catch (error) {
-        console.error("USER SIGNUP ERROR :", error);
+        console.error("USER SIGNUP ERROR:", { error });
         return c.json({ ok: false, error: error instanceof Error ? error.message : "Internal Server Error" }, 500);
     }
 };
@@ -61,7 +61,7 @@ export const signin = async (c: Context) => {
             return c.json({ ok: false, error: error instanceof Error ? error.message : "Invalid credentials" }, 401);
         }
     } catch (error) {
-        console.error("USER SIGNIN ERROR :", error);
+        console.error("USER SIGNIN ERROR:", { error });
         return c.json({ ok: false, error: error instanceof Error ? error.message : "Internal Server Error" }, 500);
     }
 };
@@ -73,7 +73,7 @@ export const logout = async (c: Context) => {
             asResponse: true,
         });
     } catch (error) {
-        console.error("USER LOGOUT ERROR :", error);
+        console.error("USER LOGOUT ERROR:", { error });
         return c.json({ ok: false, error: error instanceof Error ? error.message : "Internal Server Error" }, 500);
     }
 };
@@ -83,7 +83,7 @@ export const getMe = async (c: Context) => {
         const user = c.get("user");
         return c.json({ ok: true, user });
     } catch (error) {
-        console.error("USER FETCHING ERROR :", error);
+        console.error("USER FETCHING ERROR:", { userId: c.get("user")?.id, error });
         return c.json({ ok: false, error: error instanceof Error ? error.message : "Internal Server Error" }, 500);
     }
 };

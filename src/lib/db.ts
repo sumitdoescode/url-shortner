@@ -11,8 +11,8 @@ export const connectDB = async () => {
         const { connection } = await mongoose.connect(MONGODB_URI, {
             dbName: "url-shortner",
         });
-        console.log("MongoDB connected", connection.host);
+        console.log("MONGODB CONNECTED:", connection.host);
     } catch (error) {
-        console.error("Error connecting to MongoDB:", error);
+        console.error("MONGODB CONNECTION ERROR:", error);
     }
 };
