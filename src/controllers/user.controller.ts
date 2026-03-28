@@ -2,7 +2,6 @@ import type { Context } from "hono";
 import { auth } from "../lib/auth";
 import { flattenError } from "zod";
 import { signupSchema, signinSchema } from "../schemas/user.schema";
-import { Profile } from "../models/profile.model";
 
 export const signup = async (c: Context) => {
     try {
@@ -13,7 +12,7 @@ export const signup = async (c: Context) => {
         }
         const { name, email, password } = result.data;
         try {
-            const response = await auth.api.signUpEmail({
+            await auth.api.signUpEmail({
                 body: {
                     name,
                     email,
@@ -21,11 +20,6 @@ export const signup = async (c: Context) => {
                     // callbackURL: "https://example.com/callback",
                 },
                 headers: c.req.raw.headers,
-            });
-
-            await Profile.create({
-                userId: response.user.id,
-                plan: "free",
             });
 
             return c.json({ ok: true, message: "User created successfully. Please verify your email." }, 201);

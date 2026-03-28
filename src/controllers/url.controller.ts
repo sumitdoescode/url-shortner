@@ -3,7 +3,6 @@ import { createUrlSchema } from "../schemas/url.schema";
 import { flattenError } from "zod";
 import { Url } from "../models/url.model";
 import { Visit } from "../models/visit.model";
-import { Profile } from "../models/profile.model";
 import { nanoid } from "nanoid";
 import { isValidObjectId } from "mongoose";
 import { redis } from "../lib/redis";
@@ -17,13 +16,8 @@ export const createUrl = async (c: Context) => {
             return c.json({ ok: false, error: flattenError(result.error).fieldErrors }, 400);
         }
         const { url } = result.data;
-        const profile = await Profile.findOne({ userId: user.id });
-
-        if (!profile) {
-            return c.json({ ok: false, error: "Profile not found" }, 404);
-        }
-
-        const urlLimit = profile.plan === "pro" ? 100 : 5;
+        const plan = user.plan ?? "free";
+        const urlLimit = plan === "pro" ? 100 : 5;
         const usedUrls = await Url.countDocuments({ userId: user.id });
 
         if (usedUrls >= urlLimit) {
@@ -47,6 +41,17 @@ export const createUrl = async (c: Context) => {
                 shortCode: nanoid(5),
             });
         }
+
+        const cacheKey = `url:${createdUrl.shortCode}`;
+
+        await redis.setEx(
+            cacheKey,
+            60 * 60 * 24 * 7, // 1 week
+            JSON.stringify({
+                id: createdUrl._id.toString(),
+                originalUrl: createdUrl.originalUrl,
+            }),
+        );
 
         return c.json({ ok: true, createdUrl }, 201);
     } catch (error) {
@@ -117,7 +122,6 @@ export const getUrlVisits = async (c: Context) => {
         if (!url) {
             return c.json({ ok: false, error: "URL not found" }, 404);
         }
-
         const visits = await Visit.find({ urlId: id }).sort({ createdAt: -1 });
         return c.json({ ok: true, visits });
     } catch (error) {

@@ -3,11 +3,6 @@ import { Url } from "../models/url.model";
 import { Context } from "hono";
 import { redis } from "../lib/redis";
 
-type CachedRedirect = {
-    id: string;
-    originalUrl: string;
-};
-
 export const handleRedirect = async (c: Context) => {
     try {
         const { shortCode } = c.req.param();
@@ -17,37 +12,29 @@ export const handleRedirect = async (c: Context) => {
         const cacheKey = `url:${shortCode}`;
 
         const cachedRedirect = await redis.get(cacheKey);
-        if (cachedRedirect) {
-            const { id, originalUrl } = JSON.parse(cachedRedirect) as CachedRedirect;
-
-            Visit.create({
-                urlId: id,
-            }).catch((error) => {
-                console.error("VISIT CREATE ERROR:", { error });
-            });
-            return c.redirect(originalUrl);
+        if (!cachedRedirect) {
+            const url = await Url.findOne({ shortCode });
+            if (!url) {
+                return c.json({ ok: false, error: "URL not found" }, 404);
+            }
+            await redis.setEx(
+                cacheKey,
+                60 * 60 * 24 * 7, // 1 week
+                JSON.stringify({
+                    id: url._id.toString(),
+                    originalUrl: url.originalUrl,
+                }),
+            );
         }
 
-        const url = await Url.findOne({ shortCode });
-        if (!url) {
-            return c.json({ ok: false, error: "URL not found" }, 404);
-        }
-
-        await redis.setEx(
-            cacheKey,
-            60 * 60 * 24, // 1 day
-            JSON.stringify({
-                id: url._id.toString(),
-                originalUrl: url.originalUrl,
-            } satisfies CachedRedirect),
-        );
+        const { id, originalUrl } = JSON.parse(cachedRedirect!);
 
         Visit.create({
-            urlId: url._id,
+            urlId: id,
         }).catch((error) => {
             console.error("VISIT CREATE ERROR:", { error });
         });
-        return c.redirect(url.originalUrl);
+        return c.redirect(originalUrl);
     } catch (error) {
         console.error("REDIRECT ERROR:", { error });
         return c.json({ ok: false, error: error instanceof Error ? error.message : "Internal Server Error" }, 500);

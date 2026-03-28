@@ -8,6 +8,16 @@ const adapter = mongodbAdapter(client.db("url-shortner"));
 
 export const auth = betterAuth({
     database: adapter,
+    user: {
+        additionalFields: {
+            plan: {
+                type: "string",
+                required: false,
+                input: false,
+                defaultValue: "free", // free or pro
+            },
+        },
+    },
     emailAndPassword: {
         enabled: true,
         requireEmailVerification: true,
@@ -25,7 +35,6 @@ export const auth = betterAuth({
                 <p>Click on the link below to verify your email address</p>
                 <a href="${url}">Verify your email address</a>
                 `,
-                // react: EmailVerificationTemplate({ name: user.name, email: user.email, verificationUrl: url }),
             });
             if (error) {
                 console.error("EMAIL VERIFICATION SEND ERROR:", {
@@ -36,9 +45,4 @@ export const auth = betterAuth({
             }
         },
     },
-    // emailVerification: {
-    //     enabled: true,
-    // },
-
-    //...
 });
