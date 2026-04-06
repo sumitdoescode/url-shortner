@@ -13,7 +13,7 @@ export const authRateLimit = rateLimiter({
 
 export const redirectRateLimit = rateLimiter({
     windowMs: 60 * 1000, // 1 minute
-    limit: 60, // limit each IP to 60 requests per windowMs
+    limit: 100, // limit each IP to 100 requests per windowMs
     keyGenerator: (c) => {
         const forwardedFor = c.req.header("x-forwarded-for");
         const realIp = c.req.header("x-real-ip");
