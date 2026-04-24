@@ -12,11 +12,15 @@ export const handleRedirect = async (c: Context) => {
         const cacheKey = `url:${shortCode}`;
 
         const cachedRedirect = await redis.get(cacheKey);
+
+        let url: any;
         if (!cachedRedirect) {
-            const url = await Url.findOne({ shortCode });
+            // if cache doesn't exists we need to check in the database
+            url = await Url.findOne({ shortCode }).select("-__v -updatedAt -userId");
             if (!url) {
                 return c.json({ ok: false, error: "URL not found" }, 404);
             }
+            // store it in cache for 1 week
             await redis.setEx(
                 cacheKey,
                 60 * 60 * 24 * 7, // 1 week
@@ -25,16 +29,16 @@ export const handleRedirect = async (c: Context) => {
                     originalUrl: url.originalUrl,
                 }),
             );
+        } else {
+            url = JSON.parse(cachedRedirect);
         }
 
-        const { id, originalUrl } = JSON.parse(cachedRedirect!);
-
         Visit.create({
-            urlId: id,
+            urlId: url.id,
         }).catch((error) => {
             console.error("VISIT CREATE ERROR:", { error });
         });
-        return c.redirect(originalUrl);
+        return c.redirect(url.originalUrl);
     } catch (error) {
         console.error("REDIRECT ERROR:", { error });
         return c.json({ ok: false, error: error instanceof Error ? error.message : "Internal Server Error" }, 500);
