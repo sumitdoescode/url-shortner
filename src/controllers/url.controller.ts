@@ -80,11 +80,15 @@ export const getSingleUrl = async (c: Context) => {
         }
         let url: any = await Url.findOne({ _id: id, userId: user.id }).select("-__v -updatedAt -userId");
         if (!url) {
-            return c.json({ ok: false, error: "URL not found" }, 404);
+            return c.json({ ok: false, error: "URL not found or you are not authorized to access it" }, 404);
         }
 
         const totalVisits = await Visit.countDocuments({ urlId: id });
-        url = { ...url._doc, totalVisits, shortUrl: `${process.env.BASE_URL}/r/${url.shortCode}` };
+        url = {
+            ...url._doc,
+            totalVisits,
+            shortUrl: `${process.env.BASE_URL}/r/${url.shortCode}`,
+        };
         return c.json({ ok: true, url });
     } catch (error) {
         console.error("URL FETCHING ERROR:", { error });
@@ -103,7 +107,12 @@ export const deleteUrl = async (c: Context) => {
         if (!deleted) {
             return c.json({ ok: false, error: "URL not found or you are not authorized to delete it" }, 404);
         }
+
+        // Delete from cache
         await redis.del(`url:${deleted.shortCode}`);
+
+        // Delete associated visits
+        await Visit.deleteMany({ urlId: id });
         return c.json({ ok: true, message: "URL deleted successfully" });
     } catch (error) {
         console.error("URL DELETION ERROR:", { error });
